@@ -1,25 +1,20 @@
 # train_model.py
 import pandas as pd
 import joblib
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
 
 # -----------------------------
-# 1️⃣ Datasetni o‘qish
+# 1️⃣ Datasetni o'qish
 # -----------------------------
 df = pd.read_csv("data/loan.csv")
-
-# Kolonka nomlarini tozalash
 df.columns = df.columns.str.strip()
 
 # -----------------------------
 # 2️⃣ Target tozalash
 # -----------------------------
 df = df.dropna(subset=["loan_status"])
-df["loan_status"] = df["loan_status"].map(
-    {"Approved": 1, "Rejected": 0}
-).fillna(df["loan_status"])
+df["loan_status"] = df["loan_status"].map({"Approved": 1, "Rejected": 0}).fillna(df["loan_status"])
 
 # -----------------------------
 # 3️⃣ Categorical ustunlar
@@ -27,12 +22,7 @@ df["loan_status"] = df["loan_status"].map(
 categorical_cols = ["education", "self_employed"]
 
 for col in categorical_cols:
-    df[col] = (
-        df[col]
-        .astype(str)
-        .str.strip()
-        .str.lower()   # 🔥 ENG MUHIM
-    )
+    df[col] = df[col].astype(str).str.strip().str.lower()
     df[col] = df[col].fillna(df[col].mode()[0])
 
 le_dict = {}
@@ -50,12 +40,11 @@ numeric_cols = [
     "commercial_assets_value", "luxury_assets_value",
     "bank_asset_value"
 ]
-
 for col in numeric_cols:
     df[col] = df[col].fillna(df[col].median())
 
 # -----------------------------
-# 5️⃣ X va y
+# 5️⃣ Features va Target
 # -----------------------------
 X = df.drop(columns=["loan_id", "loan_status"])
 y = df["loan_status"]
@@ -79,4 +68,7 @@ joblib.dump(knn_model, "models/loan_model.pkl")
 joblib.dump(scaler, "models/scaler.pkl")
 joblib.dump(le_dict, "models/le_dict.pkl")
 
-print("✅ Model, scaler va encoder yangilandi")
+# Treningdagi ustunlarni saqlash (xato chiqmasligi uchun)
+joblib.dump(X.columns.tolist(), "models/features.pkl")
+
+print("✅ Model, scaler, encoder va feature columns saqlandi")
